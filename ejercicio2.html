@@ -3,97 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reconocimiento de Imágenes</title>
+  <title>Clasificador de Imágenes</title>
 
-  <!-- CDN para Bootstrap -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- CDN para p5.js -->
+  <!-- CDN de Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- CDN de p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
-
-  <!-- CDN para ML5.js -->
+  <!-- CDN de ML5.js -->
   <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
 
   <style>
     body {
-      background-color: #f8f9fa;
-      padding-top: 20px;
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
+      padding: 20px;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
-    .container-custom {
-      max-width: 800px;
+    .container {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      width: 90%;
+      max-width: 1000px;
       padding: 20px;
-      border-radius: 10px;
     }
-    .image-container {
-      max-width: 600px;
-      max-height: 400px;
-      margin-bottom: 20px;
+    .image-section {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
     }
-    .thumbnail-container {
+    .thumbnail-gallery {
+      flex-basis: 25%;
       display: flex;
       flex-direction: column;
       gap: 10px;
       align-items: center;
     }
-    .thumbnail {
-      width: 100px;
-      height: 100px;
+    .thumbnail-gallery img {
+      width: 80px;
+      height: 80px;
       object-fit: cover;
       cursor: pointer;
-      border: 2px solid #003166;
-      transition: transform 0.3s;
+      border-radius: 8px;
+      transition: transform 0.2s ease;
     }
-    .thumbnail:hover {
+    .thumbnail-gallery img:hover {
       transform: scale(1.1);
     }
-    .image-details {
+    .main-image-container {
+      flex-basis: 70%;
       text-align: center;
+    }
+    .main-image-container img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+    .result-section {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .progress-container {
+      margin-top: 20px;
+    }
+    .progress-bar {
+      height: 20px;
+      border-radius: 10px;
+    }
+    .confidence-percentage {
+      margin-top: 5px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .image-details {
       margin-top: 10px;
       font-size: 18px;
       color: #333;
-      padding: 10px;
-      border: 2px solid #003166;
-      border-radius: 5px;
-      background-color: #e9f5ff;
-      display: inline-block;
-    }
-    .confidence-bar {
-      margin-top: 10px;
-      text-align: center;
-    }
-    .progress-bar {
-      position: relative;
-    }
-    .progress-bar span {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      color: rgb(0, 0, 0);
     }
   </style>
 </head>
 <body>
-
-  <div class="container-custom">
-    <div class="row">
-      <div class="col-md-4">
-        <div class="thumbnail-container">
-          <img src="images/animal-01.jpg" class="thumbnail" onclick="changeImage('images/animal-01.jpg')">
-          <img src="images/animal-02.jpg" class="thumbnail" onclick="changeImage('images/animal-02.jpg')">
-          <img src="images/animal-03.jpg" class="thumbnail" onclick="changeImage('images/animal-03.jpg')">
-        </div>
+  <div class="container">
+    <div class="image-section">
+      <div class="thumbnail-gallery">
+        <img src="images/animal-01.jpg" alt="Imagen 1" onclick="changeImage('images/animal-01.jpg')">
+        <img src="images/animal-02.jpg" alt="Imagen 2" onclick="changeImage('images/animal-02.jpg')">
+        <img src="images/animal-03.jpg" alt="Imagen 3" onclick="changeImage('images/animal-03.jpg')">
       </div>
-      
-      <div class="col-md-8">
-        <div id="image-container" class="image-container"></div>
-        <div id="image-details" class="image-details"></div>
-        <div id="confidence-bar" class="confidence-bar"></div>
+      <div class="main-image-container">
+        <div id="image-container"></div>
       </div>
+    </div>
+    <!-- Sección de resultados centrada debajo de las imágenes -->
+    <div class="result-section">
+      <div id="image-details" class="image-details"></div>
+      <div id="confidence-bar" class="progress-container"></div>
     </div>
   </div>
 
@@ -119,7 +128,7 @@
       const imgElement = document.createElement('img');
       imgElement.src = imageSrc;
       imgElement.style.maxWidth = '100%';
-      imgElement.style.maxHeight = '100%';
+      imgElement.style.maxHeight = '400px';
       imageContainer.innerHTML = '';
       imageContainer.appendChild(imgElement);
     }
@@ -135,21 +144,22 @@
         classifier.classify(img, gotResult);
       });
     }
-
     function gotResult(results) {
-      const label = results[0].label;
       confidence = (results[0].confidence * 100).toFixed(2);
+      const label = results[0].label;
+
+      // Mostrar la etiqueta de la imagen
       document.getElementById('image-details').innerHTML = `<strong>Etiqueta:</strong> ${label}`;
-      document.getElementById('confidence-bar').innerHTML = `
-        <p><strong>Confianza:</strong></p>
+
+      // Mostrar la barra de confianza
+      const progressBarHTML = `
         <div class="progress">
-          <div class="progress-bar text-bg-secondary" role="progressbar" style="width: ${confidence}%" aria-valuenow="${confidence}" aria-valuemin="0" aria-valuemax="100">
-            <span>${confidence}%</span>
-          </div>
+          <div class="progress-bar" role="progressbar" style="width: ${confidence}%" aria-valuenow="${confidence}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
+        <div class="confidence-percentage">Confianza: ${confidence}%</div>
       `;
+      document.getElementById('confidence-bar').innerHTML = progressBarHTML;
     }
   </script>
-
 </body>
 </html>
