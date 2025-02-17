@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reconocimiento de HAND POSE</title>
+
+  <!-- CDN para gestión de objetos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <!-- CDN para ML -->
+  <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+
+  <style>
+    h2{
+      text-align: center;
+    }
+    /* Centrar y bajar el visor */
+    canvas {
+      display: block;
+      margin: auto;
+      position: relative;
+      top: 30px;
+    }
+  </style>
+  
+</head>
+<body>
+  <h2>HAND POSE</h2>
+  <script>
+    
+    let handPose;
+    let video;
+    let hands = [];
+
+    function preload() {
+      // Cargar el modelo de HandPose
+      handPose = ml5.handPose();
+    }
+
+    function setup() {
+      let cnv = createCanvas(640, 480);
+      cnv.parent(document.body);
+      video = createCapture(VIDEO);
+      video.size(640, 480);
+      video.hide();
+      handPose.detectStart(video, gotHands);
+    }
+
+    function draw() {
+      image(video, 0, 0, width, height);
+
+      if (hands.length > 0) {
+        let finger = hands[0].index_finger_tip;
+        let thumb = hands[0].thumb_tip;
+
+        let centerX = (finger.x + thumb.x) / 2;
+        let centerY = (finger.y + thumb.y) / 2;
+        let pinch = dist(finger.x, finger.y, thumb.x, thumb.y);
+
+        // Definir el color según el tamaño del pinch
+        let circleColor;
+        if (pinch < 30) {
+          circleColor = color(255, 0, 0); //rojo
+        } else if (pinch < 60) {
+          circleColor = color(255, 165, 0); //naranja
+        } else {
+          circleColor = color(255, 255, 0); //amarillo
+        }
+
+        fill(circleColor);
+        stroke(0);
+        strokeWeight(2);
+        circle(centerX, centerY, pinch);
+      }
+    }
+
+    function gotHands(results) {
+      hands = results;
+    }
+  </script>
+</body>
+</html>
