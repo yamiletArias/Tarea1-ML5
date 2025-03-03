@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot de Turismo</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-image: url('./images/huacachina.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            padding-left: 50px;
+        }
+
+        .contenido {
+            max-width: 400px; 
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            padding: 15px;
+            border-radius: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra en el texto */
+            text-align: left;
+        }
+
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenido">
+        <h2>¡Bienvenido al Chatbot Turístico Ica Aventure!</h2>
+        <p>Este chatbot está diseñado para ofrecerte información sobre los <strong>
+        tours y servicios turísticos en Huacachina</strong>. Podrás conocer los <strong>
+        paquetes disponibles, actividades, horarios y métodos de pago</strong> 
+        de manera fácil e interactiva.</p>
+
+        <ul>
+            <li>Explora las opciones de tours y aventuras</li>
+            <li>Consulta precios y horarios en tiempo real</li>
+            <li>Descubre los métodos de pago disponibles</li>
+            <li>Planifica tu viaje con información confiable</li>
+        </ul>
+
+        <p>Nuestro chatbot, potenciado con <strong>IBM Watson Assistant</strong>, 
+        te responderá al instante y te guiará en cada paso de tu viaje.</p>
+    </div>
+
+    <script>
+        window.watsonAssistantChatOptions = {
+          integrationID: "06e82802-4104-43e8-939c-fa7f80081be6", 
+          region: "au-syd", 
+          serviceInstanceID: "78146a24-68c2-4fde-af2f-9e17f82fb17a", 
+          onLoad: async (instance) => { await instance.render(); }
+        };
+        setTimeout(function(){
+          const t=document.createElement('script');
+          t.src="https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + (window.watsonAssistantChatOptions.clientVersion || 'latest') + "/WatsonAssistantChatEntry.js";
+          document.head.appendChild(t);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clasificación de Formas</title>
+
+  <!-- CDN para gestión de objetos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+
+  <!-- CDN para ML -->
+  <script src="https://cdn.jsdelivr.net/npm/ml5@0.12/dist/ml5.min.js"></script>
+
+  <style>
+    body {
+      background-color: antiquewhite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      flex-direction: column;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    canvas {
+      border: 2px solid black;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #buttonContainer {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Clasificación de Formas</h1>
+    <div id="result">Cargando el modelo personalizado...</div>
+    <div id="canvasContainer"></div>
+    <div id="buttonContainer"></div>
+  </div>
+
+  <script>
+    let shapeClassifier;
+    let canvas;
+    let resultDiv;
+    let inputImage;
+    let clearButton;
+    let spokenOnce = false; //1 vez
+
+    function setup() {
+      canvas = createCanvas(400, 400);
+      canvas.parent('canvasContainer');
+      background(255);
+
+      let options = {
+        inputs: [64, 64, 4],
+        task  : 'imageClassification'
+      };
+      shapeClassifier = ml5.neuralNetwork(options);
+
+      const modelDetails = {
+        model: './modelShape/model.json',
+        metadata: './modelShape/model_meta.json',
+        weights: './modelShape/model.weights.bin'
+      };
+
+      clearButton = createButton("Limpiar");
+      clearButton.mousePressed(function () {
+        background(255);
+        spokenOnce = false; //resetea
+      });
+      clearButton.parent('buttonContainer');
+
+      resultDiv = select('#result');
+      inputImage = createGraphics(64, 64);
+      shapeClassifier.load(modelDetails, modelLoaded);
+    }
+
+    function modelLoaded() {
+      console.log("Modelo Listo");
+      classifyImage();
+    }
+
+    function classifyImage() {
+      inputImage.copy(canvas, 0, 0, 400, 400, 0, 0, 64, 64);
+      inputImage.filter(THRESHOLD);
+      shapeClassifier.classify({image: inputImage}, goResult);
+    }
+
+
+    function goResult(err, result) {
+      if (err) {
+        console.error("No pudimos verificar el objeto");
+        return;
+      }
+
+      let etiqueta = result[0].label;
+      let confianza = result[0].confidence;
+      let confianzaAjustada = map(confianza, 0, 1, 0.5, 1);
+
+      resultDiv.html("Etiqueta: " + etiqueta + " - Confianza: " + nf(confianzaAjustada, 0, 2));
+
+      if (confianzaAjustada > 0.75 && !spokenOnce) {
+        speak(etiqueta);
+        spokenOnce = true;
+      }
+      classifyImage();
+    }
+
+    function speak(text) {
+      let synth = window.speechSynthesis;
+      let utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      synth.speak(utterance);
+    }
+
+    function draw() {
+      if (mouseIsPressed) {
+        strokeWeight(8);
+        line(mouseX, mouseY, pmouseX, pmouseY);
+      }
+    }
+  </script>
+</body>
+</html>
